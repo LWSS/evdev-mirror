@@ -1,0 +1,12 @@
+KERNEL_PATH ?= /lib/modules/$(shell uname -r)/build
+CC=gcc
+
+obj-m += evdev-mirror.o
+
+all:
+	make -C $(KERNEL_PATH) M=$(PWD) modules
+	gcc -o read_example read_example.c
+
+clean:
+	make -C $(KERNEL_PATH) M=$(PWD) clean
+	rm read_example
