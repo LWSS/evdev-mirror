@@ -13,10 +13,15 @@
 struct input_value {
     uint16_t type;
     uint16_t code;
-    uint32_t value;
+    int32_t value;
 };
 
+#define EV_KEY			0x01
+#define EV_REL	        0x02
 
+// Made up
+#define AXIS_X          0x00 // left negative - right positive
+#define AXIS_Y          0x01 // up negative - down positive
 int main( int argc, char **argv )
 {
     int fd;
@@ -36,7 +41,17 @@ int main( int argc, char **argv )
         // if zero bytes, keep goin...
         if( !read( fd, &input, sizeof(struct input_value) ) )
             continue;
-
-        printf("Key: %d - state: %d\n", input.code, input.value);
+        if( input.type == EV_KEY ){
+            printf("KeyPress: %d - state: %d\n", input.code, input.value);
+        } else if( input.type == EV_REL ){
+            printf("MouseMove: axis(%s) units(%d) ", input.code ? "Y" : "X", input.value);
+            if( input.code ){
+                printf( "%s\n", (input.value > 0) ? "DOWN" : "UP" );
+            } else {
+                printf( "%s\n", (input.value > 0) ? "RIGHT" : "LEFT" );
+            }
+        } else {
+            printf("unknown input?\n");
+        }
     }
 }
