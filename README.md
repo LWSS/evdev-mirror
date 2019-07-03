@@ -28,6 +28,11 @@ Because that recently got changed in the linux kernel. My VM was on 4.19 and i'm
 I figured that I didn't really need the timestamp anyway.
 
 The struct is still a standard linux struct, which is also in <linux/input.h>, but it's just an `input_value` instead of an `input_event` and the only difference is the missing time.
+
+## Overview
+* When inserted into the kernel, it will hook the evdev events function and create `/dev/input/evdev-mirror` character device
+* You can now read keyboard events from that device, (see the example)
+
 ## Credits
 
 -Alexey Lozovsky - For his series of articles [part1](https://www.apriorit.com/dev-blog/544-hooking-linux-functions-1) about ftrace and hooking with ftrace along with code snippets that I used in this project.
