@@ -59,6 +59,7 @@ static struct input_value last_event;
 bool fresh = false;
 
 static struct ftrace_hook evdev_events_hook;
+static struct input_handle *last_handle = 0;
 
 
 
@@ -101,6 +102,9 @@ static asmlinkage void hooked_evdev_events(struct input_handle *handle,
         /* We don't care about anything except for keypresses/mouse/touchpad */
         if( vals[i].type != EV_KEY && vals[i].type != EV_REL && vals[i].type != EV_ABS ){
             continue;
+        }
+        if( vals[i].type == EV_REL ){
+            last_handle = handle; // save mouse
         }
         spin_lock(&input_lock); // This could cause small input lag? Maybe add a buffer
         last_event = vals[i];
@@ -153,9 +157,32 @@ static ssize_t mirror_read(struct file *file,
     return sizeof(struct input_value);
 }
 
+static ssize_t mirror_write(struct file *file,
+                            const char *user_buffer,
+                            size_t count,
+                            loff_t *ppos){
+    if( count != sizeof(struct input_value) || *ppos > 0 ){
+        kprint("ERROR: Malformed input_value\n");
+        return -EFAULT;
+    }
+    if( !last_handle ){
+        kprint("Move your mouse first\n");
+        return -EFAULT;
+    }
+    struct input_value input;
+    copy_from_user(&input, user_buffer, sizeof(struct input_value));
+    //kprint("injecting event type:(%d) - code(%d) - value(%d)\n", input.type, input.code, input.value);
+
+    input_inject_event(last_handle, input.type, input.code, input.value);
+    input_sync(last_handle->dev);
+
+    return sizeof(struct input_value);
+}
+
 static const struct file_operations mirrordev_fops = {
         .owner		= THIS_MODULE,
         .read		= mirror_read,
+        .write      = mirror_write
 };
 
 static void mirrordev_release(struct device *dev)

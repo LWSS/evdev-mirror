@@ -26,6 +26,7 @@ struct input_value {
 
 int main( int argc, char **argv )
 {
+    printf("asdf\n");
     int fd;
     struct input_value input;
 
@@ -33,29 +34,19 @@ int main( int argc, char **argv )
         printf("Run as root!\n");
         return -2;
     }
-    fd = open("/dev/input/evdev-mirror", O_RDONLY);
+    fd = open("/dev/input/evdev-mirror", O_WRONLY);
     if( fd < 0 ){
         printf("Error opening evdev-mirror!(%d)\n", fd);
         return -1;
     }
 
-    while( 1 ){
-        // if zero bytes, keep goin...
-        if( !read( fd, &input, sizeof(struct input_value) ) )
-            continue;
-        if( input.type == EV_KEY ){
-            printf("KeyPress: %d - state: %d\n", input.code, input.value);
-        } else if( input.type == EV_REL ){
-            printf("MouseMove: axis(%s) units(%d) ", input.code ? "Y" : "X", input.value);
-            if( input.code ){
-                printf( "%s\n", (input.value > 0) ? "DOWN" : "UP" );
-            } else {
-                printf( "%s\n", (input.value > 0) ? "RIGHT" : "LEFT" );
-            }
-        } else if( input.type == EV_ABS ){
-            printf( "MouseMoveAbs: (%d/%d)\n", input.code, input.value);
-        } else {
-            printf("unknown input type (BUG?)\n");
-        }
-    }
+    input.type = EV_REL;
+    input.value = 200;
+    input.code = 0;
+
+    printf("setting mouse right 200units.\n");
+
+    write( fd, &input, sizeof(struct input_value) );
+
+    return 0;
 }

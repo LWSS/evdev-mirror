@@ -6,7 +6,9 @@ obj-m += evdev-mirror.o
 all:
 	make -C $(KERNEL_PATH) M=$(PWD) modules
 	gcc -o read_example read_example.c
+	gcc -o write_example write_example.c
 
 clean:
 	make -C $(KERNEL_PATH) M=$(PWD) clean
 	rm read_example
+	rm write_example
