@@ -1,6 +1,4 @@
-// An example to read from the evdev-mirror kernel module
-//
-// Note: The module will only output EV_KEY events (keypresses)
+// An example to inject input events by using evdev-mirror kernel module
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -26,7 +24,6 @@ struct input_value {
 
 int main( int argc, char **argv )
 {
-    printf("asdf\n");
     int fd;
     struct input_value input;
 
@@ -42,7 +39,7 @@ int main( int argc, char **argv )
 
     input.type = EV_REL;
     input.value = 200;
-    input.code = 0;
+    input.code = AXIS_X;
 
     printf("setting mouse right 200units.\n");
 
