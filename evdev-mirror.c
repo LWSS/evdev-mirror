@@ -13,10 +13,14 @@
 #include <linux/cdev.h>
 #include <linux/mutex.h>
 #include <asm/spinlock.h>
+#include <linux/kprobes.h>
 
-MODULE_DESCRIPTION("");
-MODULE_AUTHOR("");
+#include "kallsyms.h"
+
+MODULE_DESCRIPTION("Mirror evdev events to a file.");
+MODULE_AUTHOR("LWSS/Heep");
 MODULE_LICENSE("GPL");
+MODULE_INFO(livepatch, "Y");
 
 //#define OUTPUT_MOUSE_EVENTS 1
 
@@ -123,22 +127,6 @@ static asmlinkage void hooked_evdev_events(struct input_handle *handle,
     orig_evdev_events( handle, vals, count );
 }
 
-/* Called with symbols containing "evdev_events". Some contain version specific suffixes */
-static int on_symbol__evdev_events(void *data,
-                                   const char *name,
-                                   struct module *module,
-                                   unsigned long address)
-{
-    if( !strcmp( name, "evdev_events" ) ){
-        evdev_events_hook.name = name;
-        evdev_events_hook.address = address;
-        return 1; // non-zero stops iteration.
-    }
-
-    return 0;
-}
-
-
 static ssize_t mirror_read(struct file *file,
                            char *user_buffer,
                            size_t count,
@@ -200,9 +188,15 @@ static void mirrordev_release(struct device *dev)
 
 static int startup(void)
 {
+    if( init_kallsyms() ){
+        kprint( "Error initing kallsyms hack.\n" );
+        return -EAGAIN;
+    }
 
-    if( !kallsyms_on_each_symbol( on_symbol__evdev_events, "evdev_events" ) ){
-        kprint( "Error iterating through modules!\n" );
+    evdev_events_hook.name = "evdev_events";
+    evdev_events_hook.address = kallsyms_lookup_name( "evdev_events" );
+    if( !evdev_events_hook.address ){
+        kprint( "Error getting evdev_events addr! (%p)\n", evdev_events_hook.address );
         return -EAGAIN;
     }
 

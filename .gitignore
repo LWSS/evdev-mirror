@@ -8,3 +8,6 @@ modules.order
 .idea/
 cmake-build-debug/
 read_example
+*.mod
+write_example
+read_example

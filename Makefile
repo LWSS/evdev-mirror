@@ -1,7 +1,8 @@
 KERNEL_PATH ?= /lib/modules/$(shell uname -r)/build
 CC=gcc
 
-obj-m += evdev-mirror.o
+obj-m += evdev_mirror.o
+evdev_mirror-objs := evdev-mirror.o kallsyms.o
 
 all:
 	make -C $(KERNEL_PATH) M=$(PWD) modules
